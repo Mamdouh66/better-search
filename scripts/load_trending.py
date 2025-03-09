@@ -58,7 +58,7 @@ def main():
         index,
         language=["ar"],
         max_results=100,
-        categories=[top_podcast_categories["Entrepreneurship"]],
+        categories=[top_podcast_categories["Society"]],
         since=timestamp_2024_01_01,
     )
 

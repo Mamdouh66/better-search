@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+    container_name: better_search_app
+    command: fastapi run better_search/api/server.py --port 8000
+    networks:
+      - better_network
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+    develop:
+      watch:
+        - action: sync
+          path: ./better_search
+          target: /app/better_search
+
+  worker:
+    build:
+      context: .
+    container_name: better_search_worker
+    command: celery -A better_search.workers.app worker --loglevel=info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - web
+    networks:
+      - better_network
+
+  redis:
+    container_name: better_search_redis
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - better_network
+
+networks:
+  better_network:
+    name: better_network
+
+volumes:
+  redis-data:

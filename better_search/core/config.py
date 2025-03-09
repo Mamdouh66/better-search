@@ -11,8 +11,13 @@ class Settings(BaseSettings):
     REDIS_HOST: str = Field(default="redis")
     REDIS_PORT: str = Field(default="6379")
 
-    CELERY_BROKER_URL: str = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-    CELERY_RESULT_BACKEND: str = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+    CELERY_BROKER_URL: str = Field(default="redis://redis:6379/0")
+    CELERY_RESULT_BACKEND: str = Field(default="redis://redis:6379/0")
+
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    DATABASE_URL: str
 
 
 settings = Settings()

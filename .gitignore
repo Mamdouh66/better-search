@@ -233,5 +233,5 @@ qdrant_storage
 notebooks/dump
 notebooks/models
 notebooks/logs
-
+logs
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,venv,dotenv,redis,database

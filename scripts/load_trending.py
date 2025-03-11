@@ -3,7 +3,7 @@ import datetime
 import time
 import os
 
-
+from better_search.core.logger import get_logger
 from better_search.lib.podcast_index.utils import (
     initialize_podcast_index,
     get_trending_podcasts,
@@ -11,6 +11,8 @@ from better_search.lib.podcast_index.utils import (
     get_podcast_episodes,
     get_podcast_by_feed_url,
 )
+
+logger = get_logger()
 
 # These are from https://api.podcastindex.org/api/1.0/categories/list?pretty
 top_podcast_categories = {
@@ -45,7 +47,7 @@ def save_to_json(data, filename: str) -> None:
     os.makedirs("tmp", exist_ok=True)
     with open(f"tmp/{filename}", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
-    print(f"Data saved to tmp/{filename}")
+    logger.info(f"Data saved to tmp/{filename}")
 
 
 def main():
@@ -65,24 +67,24 @@ def main():
     search_results, search_raw = search_podcasts(index, "ثمانية", clean=True)
 
     if trending_results:
-        print(
+        logger.info(
             f"Found {trending_results.count} trending Arabic entrepreneurship podcasts"
         )
         save_to_json(trending_raw, "trending_results.json")
 
         if trending_results.count > 0:
             first_podcast = trending_results.feeds[0]
-            print(f"Getting episodes for: {first_podcast.title}")
+            logger.info(f"Getting episodes for: {first_podcast.title}")
             episodes = get_podcast_episodes(index, first_podcast)
             save_to_json(episodes, "first_podcast_episodes.json")
 
     if search_results:
-        print(f"Found {search_results.count} podcasts matching 'سوالف بزنس'")
+        logger.info(f"Found {search_results.count} podcasts matching 'سوالف بزنس'")
         save_to_json(search_raw, "search_results.json")
 
         if search_results.count > 0:
             feed_url = search_results.feeds[0].url
-            print(f"Getting podcast details for feed URL: {feed_url}")
+            logger.info(f"Getting podcast details for feed URL: {feed_url}")
             podcast = get_podcast_by_feed_url(index, feed_url)
             if podcast:
                 save_to_json(podcast, "podcast_by_feed_url.json")

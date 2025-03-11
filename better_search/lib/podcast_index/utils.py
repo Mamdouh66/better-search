@@ -3,12 +3,15 @@ import podcastindex
 from typing import List, Optional, Tuple, Dict, Any, Union
 
 from better_search.core.config import settings
+from better_search.core.logger import get_logger
 from better_search.lib.podcast_index.schemas import (
     TrendingResults,
     SearchResults,
     TrendingFeed,
     SearchFeed,
 )
+
+logger = get_logger()
 
 
 def initialize_podcast_index():
@@ -40,7 +43,7 @@ def get_trending_podcasts(
         )
         return TrendingResults(**trending_raw), trending_raw
     except Exception as e:
-        print(f"Error fetching trending podcasts: {e}")
+        logger.error(f"Error fetching trending podcasts: {e}")
         return None, None
 
 
@@ -51,7 +54,7 @@ def search_podcasts(
         search_raw = index.search(query, clean=clean)
         return SearchResults(**search_raw), search_raw
     except Exception as e:
-        print(f"Error searching podcasts: {e}")
+        logger.error(f"Error searching podcasts: {e}")
         return None, None
 
 
@@ -68,28 +71,28 @@ def get_podcast_episodes(
             episodes_raw = index.episodesByPodcastGuid(
                 podcast.podcastGuid, max_results=max_results, fulltext=fulltext
             )
-            print(f"Retrieved episodes by podcast GUID: {podcast.podcastGuid}")
+            logger.info(f"Retrieved episodes by podcast GUID: {podcast.podcastGuid}")
 
         elif hasattr(podcast, "itunesId") and podcast.itunesId and not episodes_raw:
             episodes_raw = index.episodesByItunesId(
                 podcast.itunesId, max_results=max_results, fulltext=fulltext
             )
-            print(f"Retrieved episodes by iTunes ID: {podcast.itunesId}")
+            logger.info(f"Retrieved episodes by iTunes ID: {podcast.itunesId}")
 
         elif hasattr(podcast, "id") and podcast.id and not episodes_raw:
             episodes_raw = index.episodesByFeedId(
                 podcast.id, max_results=max_results, fulltext=fulltext
             )
-            print(f"Retrieved episodes by feed ID: {podcast.id}")
+            logger.info(f"Retrieved episodes by feed ID: {podcast.id}")
 
         else:
-            print(
+            logger.warning(
                 f"No episodes found for podcast: {getattr(podcast, 'title', 'Unknown')}"
             )
 
         return episodes_raw
     except Exception as e:
-        print(f"Error fetching episodes: {e}")
+        logger.error(f"Error fetching episodes: {e}")
         return episodes_raw
 
 
@@ -99,8 +102,8 @@ def get_podcast_by_feed_url(index, feed_url: str) -> Optional[Dict[str, Any]]:
         if podcast_raw:
             return podcast_raw["feed"]
         else:
-            print(f"No podcast found for feed URL: {feed_url}")
+            logger.warning(f"No podcast found for feed URL: {feed_url}")
             return None
     except Exception as e:
-        print(f"Error fetching podcast by feed URL: {e}")
+        logger.error(f"Error fetching podcast by feed URL: {e}")
         return None

@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, ARRAY
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    ForeignKey,
+    DateTime,
+    ARRAY,
+    BigInteger,
+)
 from sqlalchemy.orm import relationship
 from better_search.db.database import Base
 
@@ -33,7 +42,7 @@ class Episode(Base):
     duration = Column(Integer)  # in seconds
     feedItunesId = Column(Integer, nullable=True)
     image = Column(String(512))
-    podcastindex_id = Column(Integer, index=True)
+    podcastindex_id = Column(BigInteger, index=True)
     podcast_id = Column(Integer, ForeignKey("podcasts.id"), nullable=False)
 
     podcast = relationship("Podcast", back_populates="episodes")

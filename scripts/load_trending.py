@@ -1,7 +1,6 @@
-import json
 import datetime
 import time
-import os
+
 
 from better_search.core.logger import get_logger
 from better_search.lib.podcast_index.utils import (
@@ -9,7 +8,12 @@ from better_search.lib.podcast_index.utils import (
     get_trending_podcasts,
     search_podcasts,
     get_podcast_episodes,
-    get_podcast_by_feed_url,
+)
+
+from better_search.db.database import get_db_context
+from better_search.lib.podcast_index.dal import (
+    add_bulk_episodes,
+    add_bulk_podcasts,
 )
 
 logger = get_logger()
@@ -43,51 +47,107 @@ top_podcast_categories = {
 }
 
 
-def save_to_json(data, filename: str) -> None:
-    os.makedirs("tmp", exist_ok=True)
-    with open(f"tmp/{filename}", "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
-    logger.info(f"Data saved to tmp/{filename}")
-
-
 def main():
     index = initialize_podcast_index()
 
     date_2024_01_01 = datetime.datetime(2024, 1, 1)
     timestamp_2024_01_01 = int(time.mktime(date_2024_01_01.timetuple()))
 
-    trending_results, trending_raw = get_trending_podcasts(
-        index,
-        language=["ar"],
-        max_results=100,
-        categories=[top_podcast_categories["Society"]],
-        since=timestamp_2024_01_01,
-    )
+    queries = [
+        "ثمانية",
+        "بدون ورق",
+        "بترولي",
+        "مايكس",
+        "Lex Fridman",
+        "Joe Rogan",
+    ]
 
-    search_results, search_raw = search_podcasts(index, "ثمانية", clean=True)
-
-    if trending_results:
-        logger.info(
-            f"Found {trending_results.count} trending Arabic entrepreneurship podcasts"
+    for query in queries:
+        search_results, search_raw = search_podcasts(
+            index, query, clean=True, max_results=5
         )
-        save_to_json(trending_raw, "trending_results.json")
 
-        if trending_results.count > 0:
-            first_podcast = trending_results.feeds[0]
-            logger.info(f"Getting episodes for: {first_podcast.title}")
-            episodes = get_podcast_episodes(index, first_podcast)
-            save_to_json(episodes, "first_podcast_episodes.json")
+        if search_results is not None and search_results.status == "true":
+            logger.info(
+                f"Got {search_results.count} podcast for query ({search_results.query})"
+            )
+            with get_db_context() as session:
+                pd_result = add_bulk_podcasts(
+                    podcasts=search_results.feeds, session=session
+                )
+                logger.info(f"{pd_result} podcasts was inserted to the database")
+                for podcast in search_results.feeds:
+                    episodes = get_podcast_episodes(index, podcast)
+                    logger.info(f"Got {episodes.count} for {podcast.title}")
+                    if episodes is not None and episodes.status == "true":
+                        ep_result = add_bulk_episodes(episodes.items, session)
+                        if ep_result is not None:
+                            logger.info(
+                                f"{ep_result} episode for {podcast.title} was inserted to the database"
+                            )
+                        else:
+                            logger.error(f"Failed to save episodes for {podcast.title}")
 
-    if search_results:
-        logger.info(f"Found {search_results.count} podcasts matching 'سوالف بزنس'")
-        save_to_json(search_raw, "search_results.json")
+    languages = ["ar", "en"]
 
-        if search_results.count > 0:
-            feed_url = search_results.feeds[0].url
-            logger.info(f"Getting podcast details for feed URL: {feed_url}")
-            podcast = get_podcast_by_feed_url(index, feed_url)
-            if podcast:
-                save_to_json(podcast, "podcast_by_feed_url.json")
+    for lang in languages:
+        for cat in top_podcast_categories:
+            trending_results, trending_raw = get_trending_podcasts(
+                index,
+                language=[lang],
+                max_results=50,
+                categories=[top_podcast_categories[cat]],
+                since=timestamp_2024_01_01,
+            )
+            if trending_results and trending_results.status == "true":
+                logger.info(
+                    f"Found {trending_results.count} trending {lang} {cat} podcasts"
+                )
+
+                with get_db_context() as session:
+                    podcasts_count = add_bulk_podcasts(
+                        podcasts=trending_results.feeds, session=session
+                    )
+                    if podcasts_count is None:
+                        logger.error(
+                            f"Failed to save {lang} {cat} podcasts to database"
+                        )
+                        continue
+                    logger.info(
+                        f"{podcasts_count} {lang} {cat} podcasts were inserted to the database"
+                    )
+
+                    for podcast in trending_results.feeds:
+                        try:
+                            episodes = get_podcast_episodes(index, podcast)
+                            if (
+                                episodes
+                                and hasattr(episodes, "items")
+                                and episodes.items
+                            ):
+                                logger.info(
+                                    f"Got {len(episodes.items)} episodes for {podcast.title}"
+                                )
+                                episodes_count = add_bulk_episodes(
+                                    episodes.items, session
+                                )
+                                if episodes_count is not None:
+                                    logger.info(
+                                        f"{episodes_count} episodes for {podcast.title} was inserted to the database"
+                                    )
+                                else:
+                                    logger.error(
+                                        f"Failed to save episodes for {podcast.title}"
+                                    )
+                            else:
+                                logger.warning(
+                                    f"No episodes found for podcast: {podcast.title}"
+                                )
+                        except Exception as e:
+                            logger.error(
+                                f"Error processing episodes for {podcast.title}: {str(e)}"
+                            )
+                            continue
 
 
 if __name__ == "__main__":

@@ -9,6 +9,8 @@ from better_search.lib.podcast_index.schemas import (
     SearchResults,
     TrendingFeed,
     SearchFeed,
+    PodcastEpisode,
+    EpisodesResults,
 )
 
 logger = get_logger()
@@ -61,9 +63,9 @@ def search_podcasts(
 def get_podcast_episodes(
     index,
     podcast: Union[TrendingFeed, SearchFeed],
-    max_results: int = 100,
+    max_results: int = 1000,
     fulltext: bool = True,
-) -> List[Dict[str, Any]]:
+) -> Optional[EpisodesResults]:
     episodes_raw = None
 
     try:
@@ -89,11 +91,15 @@ def get_podcast_episodes(
             logger.warning(
                 f"No episodes found for podcast: {getattr(podcast, 'title', 'Unknown')}"
             )
+            return None
 
-        return episodes_raw
+        if episodes_raw and isinstance(episodes_raw, dict):
+            return EpisodesResults(**episodes_raw)
+        return None
+
     except Exception as e:
         logger.error(f"Error fetching episodes: {e}")
-        return episodes_raw
+        return None
 
 
 def get_podcast_by_feed_url(index, feed_url: str) -> Optional[Dict[str, Any]]:

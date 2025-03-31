@@ -8,11 +8,11 @@ class SearchFeed(BaseModel):
     url: str
     originalUrl: str
     link: str
-    description: str
-    author: str
+    description: Optional[str] = None
+    author: Optional[str] = None
     ownerName: str
-    image: str
-    artwork: str
+    image: Optional[str] = None
+    artwork: Optional[str] = None
     lastUpdateTime: int
     lastCrawlTime: int
     lastParseTime: int
@@ -23,18 +23,18 @@ class SearchFeed(BaseModel):
     contentType: str
     itunesId: Optional[int] = None
     generator: Optional[str] = None
-    language: str
+    language: Optional[str] = None
     type: int
     dead: int
     crawlErrors: int
     parseErrors: int
-    categories: Dict[str, str]
+    categories: Optional[Dict] = None
     locked: int
     explicit: bool
-    podcastGuid: str
+    podcastGuid: Optional[str] = None
     medium: str
     episodeCount: int
-    imageUrlHash: int
+    imageUrlHash: Optional[int] = None
     newestItemPubdate: int
 
 
@@ -51,6 +51,44 @@ class TrendingFeed(BaseModel):
     trendScore: int
     language: str
     categories: Dict[str, str]
+
+
+class PodcastEpisode(BaseModel):
+    id: int
+    title: str
+    link: str
+    description: str
+    guid: str
+    datePublished: int
+    datePublishedPretty: str
+    dateCrawled: int
+    enclosureUrl: str
+    enclosureType: str
+    enclosureLength: int
+    duration: int
+    explicit: int
+    episode: Optional[int] = None
+    episodeType: Optional[str] = None
+    season: Optional[int] = None
+    image: Optional[str] = None
+    feedItunesId: Optional[int] = None
+    feedUrl: Optional[str] = None
+    feedImage: Optional[str] = None
+    feedId: Optional[int] = None
+    podcastGuid: Optional[str] = None
+    feedLanguage: Optional[str] = None
+    feedDead: Optional[int] = None
+    feedDuplicateOf: Optional[int] = None
+    chaptersUrl: Optional[str] = None
+    transcriptUrl: Optional[str] = None
+
+
+class EpisodesResults(BaseModel):
+    status: str
+    items: list[PodcastEpisode]
+    count: int
+    query: Optional[int]
+    description: Optional[str]
 
 
 class SearchResults(BaseModel):

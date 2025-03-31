@@ -10,13 +10,14 @@ from alembic import context
 # Add the parent directory to the Python path so that we can import our models
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from better_search.db.database import Base, DATABASE_URL
+from better_search.db.database import Base
+from better_search.core.config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

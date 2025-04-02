@@ -86,7 +86,7 @@ def main():
     )
     qdrant_client.set_sparse_model("Qdrant/bm25")
 
-    collection_name = "episodes"
+    collection_name = "episodes_enhanced"
     if not qdrant_client.collection_exists(collection_name):
         qdrant_client.create_collection(
             collection_name=collection_name,
@@ -96,7 +96,7 @@ def main():
 
     logger.info("Embedding episodes into vectorstore")
     docs = [
-        f"{episode.title}\{clean_description(episode.description)}"
+        f"{episode.podcast_name}, {episode.podcast_author}\n{episode.title}\n{clean_description(episode.description)}"
         for episode in episodes
     ]
 

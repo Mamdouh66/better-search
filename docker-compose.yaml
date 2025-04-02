@@ -13,8 +13,9 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - redis
+      # - redis
       - postgres
+      - qdrant
     volumes:
       - .:/app
     develop:
@@ -23,31 +24,32 @@ services:
           path: ./better_search
           target: /app/better_search
 
-  worker:
-    build:
-      context: .
-    container_name: better_search_worker
-    command: celery -A better_search.workers.app worker --loglevel=info
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    depends_on:
-      - redis
-      - web
-      - postgres
-    networks:
-      - better_network
+  # worker:
+  #   build:
+  #     context: .
+  #   container_name: better_search_worker
+  #   command: celery -A better_search.workers.app worker --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - redis
+  #     - web
+  #     - postgres
+  #     - qdrant
+  #   networks:
+  #     - better_network
 
-  redis:
-    container_name: better_search_redis
-    image: redis:7.0-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - better_network
+  # redis:
+  #   container_name: better_search_redis
+  #   image: redis:7.0-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - better_network
 
   postgres:
     container_name: better_search_postgres
@@ -63,6 +65,49 @@ services:
     networks:
       - better_network
 
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    container_name: better_search_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    expose:
+      - "6333"
+      - "6334"
+      - "6335"
+    configs:
+      - source: qdrant_config
+        target: /qdrant/config/production.yaml
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - better_network
+
+  # weaviate:
+  #   command:
+  #     - --host
+  #     - 0.0.0.0
+  #     - --port
+  #     - "8080"
+  #     - --scheme
+  #     - http
+  #   image: cr.weaviate.io/semitechnologies/weaviate:1.29.2
+  #   ports:
+  #     - 8080:8080
+  #     - 50051:50051
+  #   volumes:
+  #     - weaviate_data:/var/lib/weaviate
+  #   restart: on-failure:0
+  #   environment:
+  #     QUERY_DEFAULTS_LIMIT: 25
+  #     AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+  #     PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+  #     ENABLE_API_BASED_MODULES: "true"
+  #     CLUSTER_HOSTNAME: "node1"
+  #   networks:
+  #     - better_network
+
 networks:
   better_network:
     name: better_network
@@ -70,3 +115,10 @@ networks:
 volumes:
   redis-data:
   postgres-data:
+  qdrant-data:
+  weaviate_data:
+
+configs:
+  qdrant_config:
+    content: |
+      log_level: INFO

@@ -1,5 +1,4 @@
-import podcastindex
-
+import re
 from typing import List, Optional, Tuple, Dict, Any, Union
 
 from better_search.core.config import settings
@@ -12,6 +11,9 @@ from better_search.lib.podcast_index.schemas import (
     PodcastEpisode,
     EpisodesResults,
 )
+
+import podcastindex
+from bs4 import BeautifulSoup
 
 logger = get_logger()
 
@@ -113,3 +115,37 @@ def get_podcast_by_feed_url(index, feed_url: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error fetching podcast by feed URL: {e}")
         return None
+
+
+def format_duration(seconds: int) -> str:
+    if not seconds:
+        return None
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    remaining_seconds = seconds % 60
+
+    if hours > 0:
+        return f"{hours}:{minutes:02d}:{remaining_seconds:02d}"
+    return f"{minutes}:{remaining_seconds:02d}"
+
+
+def clean_description(text: str) -> str:
+    if not text:
+        return ""
+
+    soup = BeautifulSoup(text, "html.parser")
+
+    clean_text = soup.get_text(separator=" ", strip=True)
+
+    clean_text = re.sub(
+        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+        "",
+        clean_text,
+    )
+
+    clean_text = re.sub(r"[\w\.-]+@[\w\.-]+\.\w+", "", clean_text)
+
+    clean_text = re.sub(r"\s+", " ", clean_text)
+    clean_text = clean_text.strip()
+
+    return clean_text

@@ -4,8 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from better_search.api.search_route import router as search_router
 
 
-
-
 def get_application() -> FastAPI:
     app = FastAPI()
 

@@ -79,11 +79,11 @@ export default function Home() {
               className="text-center mb-10 w-full"
             >
               <h1 className="text-4xl md:text-6xl font-bold mb-4 text-[#F3F3F3]">
-                اكتشف بودكاستك
-                <span className="block mt-2">المفضل القادم</span>
+                دوّر بودكاستك عدل
+                <span className="block mt-2"></span>
               </h1>
               <p className="text-[#BCBCBE]/70 text-base md:text-lg max-w-2xl mx-auto">
-                ابحث في ملايين الحلقات باستخدام محرك البحث الذكي
+                البحث التقليدي مايجي على هواك، البحث الحديث يطيب خاطرك
               </p>
             </motion.div>
 

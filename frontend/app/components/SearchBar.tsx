@@ -38,7 +38,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Search for podcasts, episodes, or topics..."
+          placeholder="حلقة جادي عن اصل المال"
           className="w-full pr-6 pl-14 py-4 text-base md:text-lg bg-transparent rounded-xl
             focus:outline-none relative z-10 text-right
             text-[#F3F3F3] placeholder-[#BCBCBE]/70

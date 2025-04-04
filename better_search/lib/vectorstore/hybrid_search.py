@@ -16,9 +16,11 @@ class HybridSearchResult(BaseModel):
 
 
 class HybridSearch:
-    def __init__(self, collection_name: str):
+    def __init__(
+        self, collection_name: str, url: str = "http://host.docker.internal:6333"
+    ):
         self.collection_name = collection_name
-        self.client = QdrantClient("http://host.docker.internal:6333")
+        self.client = QdrantClient(url=url)
         self.DENSE_MODEL = TextEmbedding(
             "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
         )
@@ -67,5 +69,7 @@ class HybridSearch:
 
 if __name__ == "__main__":
     searcher = HybridSearch("episodes_enhanced")
-    query = "كيف اقدر القى وظيفة"
-    print(searcher.search(query))
+    query = "تطوير المنتجعات في الشرقية"
+    results = searcher.search(query)
+    for result in results:
+        print(f"{result.podcast_title}: {result.episode_title}")

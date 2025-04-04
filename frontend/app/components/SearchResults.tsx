@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Clock, User, Tag } from "lucide-react";
-import { getTextDirection } from "@/src/utils/textDirection";
 
 interface SearchResult {
   episode_id: number;

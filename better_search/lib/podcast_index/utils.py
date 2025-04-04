@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from typing import List, Optional, Tuple, Dict, Any, Union
 
 from better_search.core.config import settings
@@ -149,3 +150,17 @@ def clean_description(text: str) -> str:
     clean_text = clean_text.strip()
 
     return clean_text
+
+
+def normalize_arabic(text: str) -> str:
+    tashkeel = re.compile(r"[\u0617-\u061A\u064B-\u0652]")
+    text = tashkeel.sub("", text)
+
+    text = re.sub("\u0640", "", text)
+
+    text = re.sub("[إأٱآا]", "ا", text)
+    text = re.sub("ى", "ي", text)
+    text = re.sub("ة", "ه", text)
+
+    text = unicodedata.normalize("NFKC", text)
+    return text

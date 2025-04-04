@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from better_search.lib.podcast_index.utils import format_duration, clean_description
+from better_search.lib.podcast_index.utils import (
+    format_duration,
+    clean_description,
+    normalize_arabic,
+)
 from better_search.lib.vectorstore.hybrid_search import HybridSearch
 from better_search.db.database import get_db
 from better_search.lib.podcast_index.models import Episode, Podcast
@@ -10,12 +14,13 @@ router = APIRouter(
     tags=["search"],
 )
 
-searcher = HybridSearch("episodes_enhanced")
+searcher = HybridSearch("podcast_episodes_", mode="local")
 
 
 @router.get("/")
 def search_podcast(query: str, db: Session = Depends(get_db)):
-    search_results = searcher.search(query=query)
+    normalized_query = normalize_arabic(query)
+    search_results = searcher.search(query=normalized_query)
     enhanced_results = []
 
     for result in search_results:

@@ -19,5 +19,15 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     DATABASE_URL: str
 
+    OPENAI_API_KEY: str
+
+    LOCAL_EMBEDDING_MODEL: str = (
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    )
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    SPARSE_EMBEDDING_MODEL: str = "Qdrant/bm25"
+
+    QDRANT_BASE_URL: str = "http://host.docker.internal:6333"
+
 
 settings = Settings()

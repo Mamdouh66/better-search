@@ -10,6 +10,7 @@ from qdrant_client import QdrantClient
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 import re
+import unicodedata
 
 
 class EpisodeInfo(BaseModel):
@@ -23,6 +24,20 @@ class EpisodeInfo(BaseModel):
 
 
 logger = get_logger()
+
+
+def normalize_arabic(text: str) -> str:
+    tashkeel = re.compile(r"[\u0617-\u061A\u064B-\u0652]")
+    text = tashkeel.sub("", text)
+
+    text = re.sub("\u0640", "", text)
+
+    text = re.sub("[إأٱآا]", "ا", text)
+    text = re.sub("ى", "ي", text)
+    text = re.sub("ة", "ه", text)
+
+    text = unicodedata.normalize("NFKC", text)
+    return text
 
 
 def clean_description(text: str) -> str:
@@ -43,6 +58,9 @@ def clean_description(text: str) -> str:
 
     clean_text = re.sub(r"\s+", " ", clean_text)
     clean_text = clean_text.strip()
+
+    # Normalize Arabic text
+    clean_text = normalize_arabic(clean_text)
 
     return clean_text
 
@@ -96,7 +114,7 @@ def main():
 
     logger.info("Embedding episodes into vectorstore")
     docs = [
-        f"{episode.podcast_name}, {episode.podcast_author}\n{episode.title}\n{clean_description(episode.description)}"
+        f"{normalize_arabic(episode.podcast_name)}\n{normalize_arabic(episode.podcast_author)}\n{normalize_arabic(episode.title)}\n{clean_description(episode.description)}"
         for episode in episodes
     ]
 
